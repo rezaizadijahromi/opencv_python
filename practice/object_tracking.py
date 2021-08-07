@@ -1,4 +1,9 @@
 import cv2
+from tracker import EuclideanDistTracker
+
+
+# Create tracker obj
+tracker = EuclideanDistTracker()
 
 def empty(a):
     pass
@@ -28,20 +33,33 @@ while True:
     contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     areaTrack = cv2.getTrackbarPos('Area', 'Prammeters')
 
+    detections = []
+
     for cnt in contours:
 
         # Clc area
         area = cv2.contourArea(cnt)
         if area > areaTrack:
             x, y, w, h = cv2.boundingRect(cnt)
+
+            detections.append([x, y, w, h])
+
             cv2.rectangle(roi, (x, y), (x + w, y + h), (0, 255, 0), 3)
             # cv2.drawContours(roi, [cnt], -1, (0, 255, 0), 2)
+
+    boxes_ids = tracker.update(detections)
+    for box_id in boxes_ids:
+        x, y, w, h, id = box_id
+        cv2.putText(roi, (str(id)), (x, y - 15), cv2.FONT_HERSHEY_SCRIPT_SIMPLEX, 1, (255, 0, 0), 2) 
+        cv2.rectangle(roi, (x, y), (x + w, y + h), (0, 255, 0), 3)
+
+
 
     cv2.imshow("Roi", roi)
     cv2.imshow("Frame", frame)
     cv2.imshow("Mask", mask)
     
-    if cv2.waitKey(1) & 0xFF == ord('q'):
+    if cv2.waitKey(30) & 0xFF == ord('q'):
         break
 
 cap.release()
